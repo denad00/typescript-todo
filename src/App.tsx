@@ -1,24 +1,49 @@
-import React from 'react';
-import logo from './logo.svg';
+import {useState, useEffect} from 'react';
 import './App.css';
+import Loading from './components/Loading';
+import Todo from './components/Todo';
+import TodoForm from './components/TodoForm';
 
 function App() {
+  const [todos, setTodos] = useState<Todo[]>([])
+  const [error, setError] = useState({})
+
+  interface Todo {
+    title: string;
+    id: number;
+    completed: boolean;
+  }
+
+  const handleCompleted = (index: number) => {
+    const newTodos = [...todos]
+    newTodos[index].completed = !newTodos[index].completed
+    setTodos(newTodos)
+  }
+
+  const handleDelete = (index: number) => {
+    const newTodos = [...todos]
+    newTodos.splice(index, 1)
+    setTodos(newTodos)
+  }
+
+  const handleOnSubmit = (value: string) => {
+    setTodos([...todos, {title: value, id: todos.length + 1, completed: false}])
+  }
+
+  useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/todos')
+    .then(response => response.json())
+    .then(res => setTodos(res.slice(0, 10)))
+    .catch(err => setError(err))
+  
+  }, [])
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {todos.length > 0 
+        ? todos.map((todo: Todo, index) => <Todo todo={todo} index={index} handleCompleted={handleCompleted} handleDelete={handleDelete}/>) 
+        : <Loading/>}
+        <TodoForm handleOnSubmit={handleOnSubmit}/>
     </div>
   );
 }
